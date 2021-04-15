@@ -1,0 +1,182 @@
+initialize() {
+
+		
+	// fitness-affecting mutations
+	initializeMutationType("m1", 0.5, "f", 0.1); // p1 adaptive
+	initializeMutationType("m2", 0.5, "f", 0.1); // p2 adaptive
+	
+	// inversion mutations
+	initializeMutationType("m3", 0.5, "f", 0.0); // the p1 inversion 
+	initializeMutationType("m4", 0.5, "f", 0.0); // the p2 inversion 
+	
+	// mutation rates for each class of locus (loci 0-1: fitness, locus 2: inversion)
+	// formatted like: c(rate1,rate2), c(end1,end2)
+	initializeMutationRate(c(0, 0), c(1, 2));
+
+	// disallow substitution conversion  for inversion
+	// think about stackPolicy() (keep last)
+	m1.convertToSubstitution = F;
+	m2.convertToSubstitution = F;
+	m3.convertToSubstitution = F;
+	m4.convertToSubstitution = F;
+	
+	// colors for slimgui
+	m1.color = "blue";
+	m2.color = "red";
+	m3.color = "blue"; 
+	m4.color = "red";
+
+	// genomic elements for the above mutation classes
+	initializeGenomicElementType("g1", c(m1, m2), c(0.5, 0.5));
+	initializeGenomicElement(g1, 0, 1);
+	
+	// g4 is the inversion "locus"
+	initializeGenomicElementType("g4", c(m3, m4), c(0.5, 0.5));
+	initializeGenomicElement(g4, 2, 2);
+	
+	// recombination
+	// base rate also needs to be very high to see any recombination
+	initializeRecombinationRate(1e-2);
+	
+	//	constant for all-way migration rate
+	defineConstant("migration_rate", 0.01); 
+}
+
+// divergent selection fitness callbacks
+
+// m1 has negative s in p2
+fitness(m1, p2) { 
+	if (homozygous)
+ 		return 1.0 + (-1 * mut.selectionCoeff);
+ 	else
+ 		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+}
+
+// m2 has negative s in p1
+fitness(m2, p1) { 
+	if (homozygous)
+ 		return 1.0 + (-1 * mut.selectionCoeff);
+ 	else
+ 		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+}
+
+// optimal haplotypes/initial conditions
+//p1 m1m1, m1m1, p1 (m3) inversion
+//p2 m2m2, m2m2, p2 (m4) inversion
+//p3 m1m1, m2m2 <- optimal haplotype in p3
+
+
+// p3 genotype fitness callbacks:
+
+//p3, Locus 0: 
+//m2/m2 = -2s
+//m1/m2 = 0
+//m1/m1 = 2s
+
+//p3, Locus 1: 
+//m1/m1 = -2s
+//m1/m2 = 0
+//m2/m2 = 2s
+
+// m1 has negative s in p3, but only for the second fitness locus 
+fitness(m1, p3) { 
+	
+	if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 0)
+		return relFitness;
+ 	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 1)
+ 		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+ 	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 2)
+ 		return relFitness + (-1 * mut.selectionCoeff);
+}
+
+// m2 has negative s in p3, but only for the first fitness locus 
+fitness(m2, p3) { 
+	
+	if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 0)
+		return relFitness;
+ 	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 1)
+ 		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+ 	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 2)
+ 		return relFitness + (-1 * mut.selectionCoeff);
+}
+
+// model the inversion as a genome-wide recombination suppressor
+recombination() {
+	
+	// if you are homozygous at the inversion locus, do nothing (allow recombination)
+	// (this will need to be scripted to scale better)
+	if (genome1.containsMarkerMutation(m3, 2) == genome2.containsMarkerMutation(m3, 2))
+		return F;
+	if (genome1.containsMarkerMutation(m4, 2) == genome2.containsMarkerMutation(m4, 2))
+		return F;
+	
+	// otherwise, remove all proposed breakpoints (prevent recombination)
+	breakpoints = -1;
+	return T;
+	
+}
+
+1 early(){
+	
+	// set up the populations
+
+	// create initial populations
+	sim.addSubpop("p1", 500); 
+	sim.addSubpop("p2", 500);
+	sim.addSubpop("p3", 500);
+	
+	// migration rates
+	// think about scaling for total number of migrants
+	p1.setMigrationRates(p2, migration_rate);
+	p1.setMigrationRates(p3, migration_rate);
+	
+	p2.setMigrationRates(p1, migration_rate);
+	p2.setMigrationRates(p3, migration_rate);
+	
+	p3.setMigrationRates(p1, migration_rate);
+	p3.setMigrationRates(p2, migration_rate);
+	
+
+}
+
+1 late(){
+
+	// add matching adaptive alleles & inverisons to every individual
+	// (i.e. everything is fixed)
+	p1.individuals.genomes.addNewDrawnMutation(m1, 0);
+	p1.individuals.genomes.addNewDrawnMutation(m1, 1);
+	p1.individuals.genomes.addNewDrawnMutation(m3, 2);
+	
+	p2.individuals.genomes.addNewDrawnMutation(m2, 0);
+	p2.individuals.genomes.addNewDrawnMutation(m2, 1);
+	p2.individuals.genomes.addNewDrawnMutation(m4, 2);
+
+	// p3 starts with the p1 arrangement fixed	
+	p3.individuals.genomes.addNewDrawnMutation(m3, 2);
+	
+}
+
+100 late(){
+	
+	// Print out mutation frequency for inversion loci
+
+	for (pop in sim.subpopulations){
+		// print(sum(pop.genomes.countOfMutationsOfType(m3)));
+		// print(pop.id);
+		// m3 treated as colinear, m4 as inverted for printing
+		total_colinear = sum(pop.genomes.countOfMutationsOfType(m3)); 
+		total_inverted = sum(pop.genomes.countOfMutationsOfType(m4));
+		inverted_freq = total_inverted/ (total_inverted + total_colinear);
+		cat(pop.id + " " + inverted_freq + "\n");
+	}
+	// Print out a vcf of a random assortment of samples. This case from p3 population.
+	g = p3.sampleIndividuals(10).genomes;
+	g.outputVCF();
+
+
+	sim.simulationFinished();
+
+}
+
+
+
