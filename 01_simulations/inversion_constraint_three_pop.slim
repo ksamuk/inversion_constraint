@@ -1,0 +1,307 @@
+initialize()
+{
+	//	constants
+	// if running in gui mode, use defined values
+	// otherwise, get values from command line
+	if (exists("slimgui"))
+	{
+		defineConstant("migration_rate", 0.01);
+		defineConstant("numpops", 3);
+		defineConstant("pop_size", 500);
+		defineConstant("inversions_supress_recomb", 1);
+		defineConstant("sel_coeff_adaptive_allele", 0.1);
+		defineConstant("mutation_rate", 0);
+		defineConstant("recombination_rate", 1e-2);
+		defineConstant("output_folder", "/Users/ksamuk/Dropbox (Personal)/Projects/inversion_constraint/01_simulations/output");
+		defineConstant("sim_name", "three_pop_inversions_mu=0");
+	}
+	else
+	{
+		defineConstant("migration_rate", mig_rate);
+		defineConstant("numpops", 3);
+		defineConstant("pop_size", pop_si);
+		defineConstant("inversions_supress_recomb", invs_supress);
+		defineConstant("sel_coeff_adaptive_allele", s_adaptive);
+		defineConstant("mutation_rate", mut_rate);
+		defineConstant("recombination_rate", recomb_rate);
+		defineConstant("output_folder", out_fold);
+		defineConstant("sim_name", sim_nam);
+	}
+	
+	// fitness-affecting mutations
+	initializeMutationType("m1", 0.5, "f", sel_coeff_adaptive_allele); // p1 adaptive
+	initializeMutationType("m2", 0.5, "f", sel_coeff_adaptive_allele); // p2 adaptive
+	
+	// set stack groups to prevent stacking
+	m1.mutationStackGroup = -1;
+	m1.mutationStackPolicy = "l";
+	m2.mutationStackGroup = -1;
+	m2.mutationStackPolicy = "l";
+	
+	// inversion mutations
+	initializeMutationType("m3", 0.5, "f", 0.0); // the p1 inversion 
+	initializeMutationType("m4", 0.5, "f", 0.0); // the p2 inversion 
+	
+	// set stack groups to prevent stacking
+	m3.mutationStackGroup = -1;
+	m3.mutationStackPolicy = "l";
+	m4.mutationStackGroup = -1;
+	m4.mutationStackPolicy = "l";
+	
+	// mutation rates for each class of locus (loci 0-1: fitness, locus 2: inversion)
+	// formatted like: c(rate1,rate2), c(end1,end2)
+	initializeMutationRate(c(mutation_rate, mutation_rate), c(1, 2));
+	
+	// disallow substitution conversion  for inversion
+	// think about stackPolicy() (keep last)
+	m1.convertToSubstitution = F;
+	m2.convertToSubstitution = F;
+	m3.convertToSubstitution = F;
+	m4.convertToSubstitution = F;
+	
+	// colors for slimgui
+	m1.color = "blue";
+	m2.color = "red";
+	m3.color = "blue";
+	m4.color = "red";
+	
+	// genomic elements for the above mutation classes
+	initializeGenomicElementType("g1", c(m1, m2), c(0.5, 0.5));
+	initializeGenomicElement(g1, 0, 1);
+	
+	// g4 is the inversion "locus"
+	initializeGenomicElementType("g4", c(m3, m4), c(0.5, 0.5));
+	initializeGenomicElement(g4, 2, 2);
+	
+	// recombination
+	// base rate also needs to be very high to see any recombination
+	initializeRecombinationRate(recombination_rate);
+}
+
+// divergent selection fitness callbacks
+// m1 has negative s in p2
+fitness(m1, p2)
+{
+	if (homozygous)
+		return 1.0 + (-1 * mut.selectionCoeff);
+	else
+		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+}
+
+// m2 has negative s in p1
+fitness(m2, p1)
+{
+	if (homozygous)
+		return 1.0 + (-1 * mut.selectionCoeff);
+	else
+		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+}
+
+// optimal haplotypes/initial conditions
+//p1 m1m1, m1m1, p1 (m3) inversion
+//p2 m2m2, m2m2, p2 (m4) inversion
+//p3 m1m1, m2m2 <- optimal haplotype in p3
+// p3 genotype fitness callbacks:
+//p3, Locus 0: 
+//m2/m2 = -2s
+//m1/m2 = 0
+//m1/m1 = 2s
+//p3, Locus 1: 
+//m1/m1 = -2s
+//m1/m2 = 0
+//m2/m2 = 2s
+// m1 has negative s in p3, but only for the second fitness locus 
+fitness(m1, p3)
+{
+	if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 0)
+		return relFitness;
+	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 1)
+		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 2)
+		return relFitness + (-1 * mut.selectionCoeff);
+}
+
+// m2 has negative s in p3, but only for the first fitness locus 
+fitness(m2, p3)
+{
+	if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 0)
+		return relFitness;
+	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 1)
+		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 2)
+		return relFitness + (-1 * mut.selectionCoeff);
+}
+
+// model the inversion as a genome-wide recombination suppressor
+recombination()
+{
+	if (inversions_supress_recomb == 1)
+	{
+		// if you are homozygous at the inversion locus, do nothing (allow recombination)
+		// (this will need to be scripted to scale better)
+		if (genome1.containsMarkerMutation(m3, 2) == genome2.containsMarkerMutation(m3, 2))
+			return F;
+		if (genome1.containsMarkerMutation(m4, 2) == genome2.containsMarkerMutation(m4, 2))
+			return F;
+		
+		// otherwise, remove all proposed breakpoints (prevent recombination)
+		breakpoints = -1;
+		return T;
+	}
+	else
+	{
+		return T;
+	}
+}
+
+1
+{
+	// set up the populations
+	// create initial two populations
+	sim.addSubpop("p1", pop_size);
+	sim.addSubpop("p2", pop_size);
+}
+
+1
+{
+	// add matching adaptive alleles & inverisons to every individual
+	// (i.e. everything is fixed)
+	// p1 
+	p1.individuals.genomes.addNewDrawnMutation(m1, 0);
+	p1.individuals.genomes.addNewDrawnMutation(m1, 1);
+	p1.individuals.genomes.addNewDrawnMutation(m3, 2);
+	
+	// make half the pop the other mutant
+	half = asInteger(pop_size); // full pop size bc we want haploid genomes * 2
+	half_pop = sample(p1.genomes, half);
+	half_pop.addNewDrawnMutation(m2, 0);
+	half_pop.addNewDrawnMutation(m2, 1);
+	half_pop.addNewDrawnMutation(m4, 2);
+	
+	// p2  	
+	p2.individuals.genomes.addNewDrawnMutation(m2, 0);
+	p2.individuals.genomes.addNewDrawnMutation(m2, 1);
+	p2.individuals.genomes.addNewDrawnMutation(m4, 2);
+	half = asInteger(pop_size);
+	half_pop = sample(p2.genomes, half);
+	half_pop.addNewDrawnMutation(m1, 0);
+	half_pop.addNewDrawnMutation(m1, 1);
+	half_pop.addNewDrawnMutation(m3, 2);
+	
+	// p3 is seed with 50/50 p1 and p2
+	sim.addSubpop("p3", pop_size);
+	p3.setMigrationRates(c(p1, p2), c(0.5, 0.5));
+}
+
+2
+{
+	// set migration rates
+	// all-way, symetrical
+	p1.setMigrationRates(p2, migration_rate);
+	p1.setMigrationRates(p3, migration_rate);
+	p2.setMigrationRates(p1, migration_rate);
+	p2.setMigrationRates(p3, migration_rate);
+	p3.setMigrationRates(p1, migration_rate);
+	p3.setMigrationRates(p2, migration_rate);
+}
+
+1:5000
+{
+
+// write out mean fitness to one of the output files
+	if (sim.generation % 100 == 0 | sim.generation == 1)
+	{
+	seed = format("%.0i", getSeed());
+	out_file = paste0(c(output_folder, "/fitness/", sim_name, "_", seed, ".fitness.txt"));
+		for (i in 1:(numpops))
+		{
+			mean_fitness = mean(sim.subpopulations[i - 1].cachedFitness(NULL));
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " ", mean_fitness)), append=T);
+		}
+	}
+}
+
+late()
+{
+	// print out haplotype frequencies
+	if (sim.generation % 100 == 0 | sim.generation == 1)
+	{
+		for (i in 1:(numpops))
+		{
+			hap113freq = 0;
+			hap114freq = 0;
+			hap123freq = 0;
+			hap124freq = 0;
+			hap224freq = 0;
+			hap223freq = 0;
+			hap214freq = 0;
+			hap213freq = 0;
+			het_inv_freq = 0;
+			hom_inv_freq = 0;
+			inds = sim.subpopulations[i - 1].individuals;
+			for (j in inds)
+			{
+				if (j.genome1.containsMarkerMutation(m3, 2) & j.genome2.containsMarkerMutation(m4, 2))
+					het_inv_freq = het_inv_freq + 1;
+				if (j.genome1.containsMarkerMutation(m3, 2) & j.genome2.containsMarkerMutation(m3, 2))
+					hom_inv_freq = hom_inv_freq + 1;
+				if (j.genome1.containsMarkerMutation(m4, 2) & j.genome2.containsMarkerMutation(m4, 2))
+					hom_inv_freq = hom_inv_freq + 1;
+				if (j.genome1.containsMarkerMutation(m1, 0) & j.genome1.containsMarkerMutation(m1, 1) & j.genome1.containsMarkerMutation(m3, 2))
+					hap113freq = hap113freq + 1;
+				if (j.genome2.containsMarkerMutation(m1, 0) & j.genome2.containsMarkerMutation(m1, 1) & j.genome2.containsMarkerMutation(m3, 2))
+					hap113freq = hap113freq + 1;
+				if (j.genome1.containsMarkerMutation(m1, 0) & j.genome1.containsMarkerMutation(m1, 1) & j.genome1.containsMarkerMutation(m4, 2))
+					hap114freq = hap114freq + 1;
+				if (j.genome2.containsMarkerMutation(m1, 0) & j.genome2.containsMarkerMutation(m1, 1) & j.genome2.containsMarkerMutation(m4, 2))
+					hap114freq = hap114freq + 1;
+				if (j.genome1.containsMarkerMutation(m1, 0) & j.genome1.containsMarkerMutation(m2, 1) & j.genome1.containsMarkerMutation(m3, 2))
+					hap123freq = hap123freq + 1;
+				if (j.genome2.containsMarkerMutation(m1, 0) & j.genome2.containsMarkerMutation(m2, 1) & j.genome2.containsMarkerMutation(m3, 2))
+					hap123freq = hap123freq + 1;
+				if (j.genome1.containsMarkerMutation(m1, 0) & j.genome1.containsMarkerMutation(m2, 1) & j.genome1.containsMarkerMutation(m4, 2))
+					hap124freq = hap124freq + 1;
+				if (j.genome2.containsMarkerMutation(m1, 0) & j.genome2.containsMarkerMutation(m2, 1) & j.genome2.containsMarkerMutation(m4, 2))
+					hap124freq = hap124freq + 1;
+				if (j.genome1.containsMarkerMutation(m2, 0) & j.genome1.containsMarkerMutation(m2, 1) & j.genome1.containsMarkerMutation(m4, 2))
+					hap224freq = hap224freq + 1;
+				if (j.genome2.containsMarkerMutation(m2, 0) & j.genome2.containsMarkerMutation(m2, 1) & j.genome2.containsMarkerMutation(m4, 2))
+					hap224freq = hap224freq + 1;
+				if (j.genome1.containsMarkerMutation(m2, 0) & j.genome1.containsMarkerMutation(m2, 1) & j.genome1.containsMarkerMutation(m3, 2))
+					hap223freq = hap223freq + 1;
+				if (j.genome2.containsMarkerMutation(m2, 0) & j.genome2.containsMarkerMutation(m2, 1) & j.genome2.containsMarkerMutation(m3, 2))
+					hap223freq = hap223freq + 1;
+				if (j.genome1.containsMarkerMutation(m2, 0) & j.genome1.containsMarkerMutation(m1, 1) & j.genome1.containsMarkerMutation(m4, 2))
+					hap214freq = hap214freq + 1;
+				if (j.genome2.containsMarkerMutation(m2, 0) & j.genome2.containsMarkerMutation(m1, 1) & j.genome2.containsMarkerMutation(m4, 2))
+					hap214freq = hap214freq + 1;
+				if (j.genome1.containsMarkerMutation(m2, 0) & j.genome1.containsMarkerMutation(m1, 1) & j.genome1.containsMarkerMutation(m3, 2))
+					hap213freq = hap213freq + 1;
+				if (j.genome2.containsMarkerMutation(m2, 0) & j.genome2.containsMarkerMutation(m1, 1) & j.genome2.containsMarkerMutation(m3, 2))
+					hap213freq = hap213freq + 1;
+			}
+			seed = format("%.0i", getSeed());
+			total_haps = hap113freq + hap114freq + hap123freq + hap124freq + hap224freq + hap223freq + hap214freq + hap213freq;
+			
+			//write lines to output file
+			out_file = paste0(c(output_folder, "/haplotypes/", sim_name, "_", seed, ".haps.txt"));
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " het inversion ", het_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " het inversion ", het_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hom inversion ", hom_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 113 ", hap113freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 114 ", hap114freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 123 ", hap123freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 124 ", hap124freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 224 ", hap224freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 223 ", hap223freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 214 ", hap214freq / total_haps)), append=T);
+			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hap 213 ", hap213freq / total_haps)), append=T);
+		}
+	}
+}
+
+5000 late()
+{
+	//sim.outputFull("test_output.txt"); 
+	sim.simulationFinished();
+}
