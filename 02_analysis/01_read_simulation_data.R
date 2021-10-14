@@ -62,9 +62,14 @@ ggsave("plots/fitness_plot.pdf", plot = fit_plot, device = "pdf", width = 7, hei
 
 # plot of haplotype freq vs generations
 
-haplo_palatte <- colorRampPalette(c("blue", "red"))(8)
-haplo_palatte <- haplo_palatte[c(1,1,4,4,4,4,8,8)]
+#haplo_palatte <- colorRampPalette(c("blue", "red"))(8)
+#haplo_palatte <- haplo_palatte[c(1,1,4,4,4,4,8,8)]
 
+"#E41A1C"
+"#377EB8" 
+"#4DAF4A"
+
+haplo_palatte <- c("#E41A1C","#E41A1C","#4DAF4A","#4DAF4A","purple","purple","#377EB8","#377EB8" )
 
 hap_plot <- haplo_df %>%
   mutate(sim_type = gsub("three_pop_", "", sim_type)) %>%

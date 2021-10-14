@@ -6,18 +6,23 @@ initialize()
 	if (exists("slimgui"))
 	{
 		defineConstant("migration_rate", 0.01);
-		defineConstant("numpops", 3);
+		defineConstant("numpops", 2);
 		defineConstant("pop_size", 1000);
 		defineConstant("inversions_supress_recomb", 1);
 		defineConstant("sel_coeff_adaptive_allele", 0.05);
 		defineConstant("mutation_rate", 0);
 		defineConstant("recombination_rate", 1e-2);
 		defineConstant("output_folder", "~/Desktop/slim_out");
-
+		
+		
 	}
 	
 	// a label for this class of simulation
-	defineConstant("sim_type", "novel.environment"); 
+	defineConstant("sim_type", "climate.change"); 
+	
+	// the generation at which climate change occurs
+	defineConstant("climate_change_generation", 1000); 
+	
 	
 	// fitness-affecting mutations
 	initializeMutationType("m1", 0.5, "f", sel_coeff_adaptive_allele); // p1 adaptive
@@ -68,6 +73,7 @@ initialize()
 	// base rate also needs to be very high to see any recombination
 	initializeRecombinationRate(recombination_rate);
 	
+	
 	// create an outplug slug to be appenede to all output files
 	seed = format("%.0i", getSeed());
 	
@@ -76,17 +82,31 @@ initialize()
 	sel_coeff_adaptive_allele, ".inv=", inversions_supress_recomb, "_", seed, "_"));
 }
 
-// divergent selection fitness callbacks
-// m1 has negative s in p2
-fitness(m1, p2)
-{
-	if (homozygous)
-		return 1.0 + (-1 * mut.selectionCoeff);
-	else
-		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
-}
+// ***************************************************************
+// FITNESS CALLBACKS
+// ***************************************************************
+
+// optimal haplotypes
+// p1 m1m1, m1m1, p1 (m3) inversion
+// p2 m2m2, m2m2, p2 (m4) inversion
+// p2 (climate change) m1m1, m2m2
+
+// p2 genotype fitness callbacks under climate change:
+// p2, Locus 0: 
+// m2/m2 = -2s
+// m1/m2 = 0
+// m1/m1 = 2s
+// p2, Locus 1: 
+// m1/m1 = -2s
+// m1/m2 = 0
+// m2/m2 = 2s
+
+// ***************************************************************
+// Population 1
+// ***************************************************************
 
 // m2 has negative s in p1
+// i.e. simple divergent selection
 fitness(m2, p1)
 {
 	if (homozygous)
@@ -95,40 +115,61 @@ fitness(m2, p1)
 		return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
 }
 
-// optimal haplotypes/initial conditions
-//p1 m1m1, m1m1, p1 (m3) inversion
-//p2 m2m2, m2m2, p2 (m4) inversion
-//p3 m1m1, m2m2 <- optimal haplotype in p3
-// p3 genotype fitness callbacks:
-//p3, Locus 0: 
-//m2/m2 = -2s
-//m1/m2 = 0
-//m1/m1 = 2s
-//p3, Locus 1: 
-//m1/m1 = -2s
-//m1/m2 = 0
-//m2/m2 = 2s
-// m1 has negative s in p3, but only for the second fitness locus 
-fitness(m1, p3)
+// ***************************************************************
+// Population 2
+// ***************************************************************
+
+// m1 normally has negative s in p2
+// if climate_change_generation has passed:
+// m1 has negative s in p2, but only for the second fitness locus 
+// (i.e. it behaves like it does for p3 in the three population scenario)
+fitness(m1, p2)
 {
-	if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 0)
-		return relFitness;
-	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 1)
-		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
-	else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 2)
-		return relFitness + (-1 * mut.selectionCoeff);
+
+	if (sim.generation < climate_change_generation){
+
+		if (homozygous)
+			return 1.0 + (-1 * mut.selectionCoeff);
+	   else
+			return 1.0 + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+		
+	} else{
+	
+		if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 0)
+			return relFitness;
+		else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 1)
+			return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+		else if (sum(individual.genomes.containsMarkerMutation(m1, 1)) == 2)
+			return relFitness + (-1 * mut.selectionCoeff);
+	}
+
 }
 
-// m2 has negative s in p3, but only for the first fitness locus 
-fitness(m2, p3)
+// m2 normally has positive s in p2
+// if climate_change_generation has passed:
+// m2 has negative s in p2, but only for the first fitness locus 
+fitness(m2, p2)
 {
-	if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 0)
-		return relFitness;
-	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 1)
-		return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
-	else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 2)
-		return relFitness + (-1 * mut.selectionCoeff);
+
+	if (sim.generation < climate_change_generation){
+
+		if (homozygous)
+			return 1.0 + (mut.selectionCoeff);
+	   else
+			return 1.0 + (mut.mutationType.dominanceCoeff * mut.selectionCoeff);
+		
+	} else{
+	
+		if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 0)
+			return relFitness;
+		else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 1)
+			return relFitness + (mut.mutationType.dominanceCoeff * -1 * mut.selectionCoeff);
+		else if (sum(individual.genomes.containsMarkerMutation(m2, 0)) == 2)
+			return relFitness + (-1 * mut.selectionCoeff);
+	}
+
 }
+
 
 // model the inversion as a genome-wide recombination suppressor
 recombination()
@@ -186,9 +227,7 @@ recombination()
 	half_pop.addNewDrawnMutation(m1, 1);
 	half_pop.addNewDrawnMutation(m3, 2);
 	
-	// p3 is seeded with 50/50 p1 and p2
-	sim.addSubpop("p3", pop_size);
-	p3.setMigrationRates(c(p1, p2), c(0.5, 0.5));
+
 }
 
 2
@@ -196,11 +235,7 @@ recombination()
 	// set migration rates
 	// all-way, symetrical
 	p1.setMigrationRates(p2, migration_rate);
-	p1.setMigrationRates(p3, migration_rate);
 	p2.setMigrationRates(p1, migration_rate);
-	p2.setMigrationRates(p3, migration_rate);
-	p3.setMigrationRates(p1, migration_rate);
-	p3.setMigrationRates(p2, migration_rate);
 }
 
 1:5000
@@ -209,7 +244,7 @@ recombination()
 // write out mean fitness to one of the output files
 	if (sim.generation % 100 == 0 | sim.generation == 1)
 	{
-
+	
 	out_file = paste0(c(output_folder, "/fitness/", output_slug, "fitness.txt"));
 		for (i in 1:(numpops))
 		{

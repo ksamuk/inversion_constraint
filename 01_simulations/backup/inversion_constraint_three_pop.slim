@@ -7,17 +7,26 @@ initialize()
 	{
 		defineConstant("migration_rate", 0.01);
 		defineConstant("numpops", 3);
-		defineConstant("pop_size", 1000);
+		defineConstant("pop_size", 500);
 		defineConstant("inversions_supress_recomb", 1);
-		defineConstant("sel_coeff_adaptive_allele", 0.05);
+		defineConstant("sel_coeff_adaptive_allele", 0.1);
 		defineConstant("mutation_rate", 0);
 		defineConstant("recombination_rate", 1e-2);
-		defineConstant("output_folder", "~/Desktop/slim_out");
-
+		defineConstant("output_folder", "/Users/ksamuk/Dropbox (Personal)/Projects/inversion_constraint/01_simulations/output");
+		defineConstant("sim_name", "three_pop_inversions_mu=0");
 	}
-	
-	// a label for this class of simulation
-	defineConstant("sim_type", "novel.environment"); 
+	else
+	{
+		defineConstant("migration_rate", mig_rate);
+		defineConstant("numpops", 3);
+		defineConstant("pop_size", pop_si);
+		defineConstant("inversions_supress_recomb", invs_supress);
+		defineConstant("sel_coeff_adaptive_allele", s_adaptive);
+		defineConstant("mutation_rate", mut_rate);
+		defineConstant("recombination_rate", recomb_rate);
+		defineConstant("output_folder", out_fold);
+		defineConstant("sim_name", sim_nam);
+	}
 	
 	// fitness-affecting mutations
 	initializeMutationType("m1", 0.5, "f", sel_coeff_adaptive_allele); // p1 adaptive
@@ -67,13 +76,6 @@ initialize()
 	// recombination
 	// base rate also needs to be very high to see any recombination
 	initializeRecombinationRate(recombination_rate);
-	
-	// create an outplug slug to be appenede to all output files
-	seed = format("%.0i", getSeed());
-	
-	defineConstant("output_slug", c(sim_type, "_migR=", migration_rate, ".popS=", 
-	pop_size, ".mutR=", mutation_rate, ".recR=", recombination_rate, ".selC=", 
-	sel_coeff_adaptive_allele, ".inv=", inversions_supress_recomb, "_", seed, "_"));
 }
 
 // divergent selection fitness callbacks
@@ -176,7 +178,7 @@ recombination()
 	half_pop.addNewDrawnMutation(m2, 1);
 	half_pop.addNewDrawnMutation(m4, 2);
 	
-	// same thing for p2  	
+	// p2  	
 	p2.individuals.genomes.addNewDrawnMutation(m2, 0);
 	p2.individuals.genomes.addNewDrawnMutation(m2, 1);
 	p2.individuals.genomes.addNewDrawnMutation(m4, 2);
@@ -186,7 +188,7 @@ recombination()
 	half_pop.addNewDrawnMutation(m1, 1);
 	half_pop.addNewDrawnMutation(m3, 2);
 	
-	// p3 is seeded with 50/50 p1 and p2
+	// p3 is seed with 50/50 p1 and p2
 	sim.addSubpop("p3", pop_size);
 	p3.setMigrationRates(c(p1, p2), c(0.5, 0.5));
 }
@@ -209,8 +211,8 @@ recombination()
 // write out mean fitness to one of the output files
 	if (sim.generation % 100 == 0 | sim.generation == 1)
 	{
-
-	out_file = paste0(c(output_folder, "/fitness/", output_slug, "fitness.txt"));
+	seed = format("%.0i", getSeed());
+	out_file = paste0(c(output_folder, "/fitness/", sim_name, "_", seed, ".fitness.txt"));
 		for (i in 1:(numpops))
 		{
 			mean_fitness = mean(sim.subpopulations[i - 1].cachedFitness(NULL));
@@ -282,9 +284,7 @@ late()
 			total_haps = hap113freq + hap114freq + hap123freq + hap124freq + hap224freq + hap223freq + hap214freq + hap213freq;
 			
 			//write lines to output file
-			
-
-			out_file = paste0(c(output_folder, "/haplotypes/", output_slug, "haps.txt"));
+			out_file = paste0(c(output_folder, "/haplotypes/", sim_name, "_", seed, ".haps.txt"));
 			writeFile(out_file, paste0(c(sim.generation, " pop", i, " het inversion ", het_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
 			writeFile(out_file, paste0(c(sim.generation, " pop", i, " het inversion ", het_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
 			writeFile(out_file, paste0(c(sim.generation, " pop", i, " hom inversion ", hom_inv_freq / (hom_inv_freq + het_inv_freq))), append=T);
