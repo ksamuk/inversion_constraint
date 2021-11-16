@@ -5,8 +5,8 @@ library("tidyverse")
 
 # read in simulation data -------------------------------------------------
 
-haplo_files <- list.files("../01_simulations/output/haplotypes", full.names = TRUE)
-fitness_files <- list.files("../01_simulations/output/fitness", full.names = TRUE)
+haplo_files <- list.files("../01_simulations/data/slim_output/haplotypes", full.names = TRUE)
+fitness_files <- list.files("../01_simulations/data/slim_output/fitness", full.names = TRUE)
 
 # function for reading in a single simulation file
 # and adding its meta data (from the file name) as columns
