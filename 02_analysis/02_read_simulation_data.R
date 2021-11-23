@@ -4,7 +4,7 @@
 library("tidyverse")
 
 # read in simulation data -------------------------------------------------
-setwd("/Users/Marius/Dropbox/My Mac (Marius’s MacBook Pro)/Desktop/inversion_constraint-main/marius_trials")
+setwd("/Users/Marius/Dropbox/My Mac (Marius’s MacBook Pro)/Desktop/slim_out")
 #haplo_files <- list.files("../01_simulations/output/haplotypes", full.names = TRUE)
 haplo_files.all <- list.files("output/haplotypes", full.names = TRUE)
 #fitness_files <- list.files("../01_simulations/output/fitness", full.names = TRUE)
@@ -85,7 +85,7 @@ for(s in 1:length(seeds)){ # file-loop opens
         mutate(sim_type = gsub("three_pop_", "", sim_type)) %>%
         mutate(mu = paste0("mu=", mu)) %>%
         filter(hap_class == "hap") %>%
-        #filter(sim_type == "inversions") %>% # switch off if inversion was turned off in the simulation
+        filter(sim_type == "inversion.present") %>% # switch off if inversion was turned off in the simulation
         ggplot(aes(x = gen, y = frequency, group = interaction(pop, seed, haplotype), color = haplotype)) +
         geom_line(size = 0.2) +
         facet_grid(mu~pop)+
