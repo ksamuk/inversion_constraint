@@ -196,7 +196,7 @@ recombination()
 	p2.setMigrationRates(p1, migration_rate);
 }
 
-3000
+1000
 {	
 	// p3 is seeded with 50/50 p1 and p2
 	sim.addSubpop("p3", pop_size);
@@ -215,11 +215,11 @@ recombination()
 	if (sim.generation % 100 == 0 | sim.generation == 1)
 	{
 	
-		if (sim.generation < 3000)
+		if (sim.generation < 1000)
 		{
 			tempnumpops = 2;
 		}
-		if (sim.generation > 2999)
+		if (sim.generation > 999)
 		{
 			tempnumpops = numpops;
 		}
@@ -241,11 +241,11 @@ late()
 	if (sim.generation % 100 == 0 | sim.generation == 1)
 	{
 		
-		if (sim.generation < 3000)
+		if (sim.generation < 1000)
 		{
 			tempnumpops = 2;
 		}
-		if (sim.generation > 2999)
+		if (sim.generation > 999)
 		{
 			tempnumpops = numpops;
 		}
