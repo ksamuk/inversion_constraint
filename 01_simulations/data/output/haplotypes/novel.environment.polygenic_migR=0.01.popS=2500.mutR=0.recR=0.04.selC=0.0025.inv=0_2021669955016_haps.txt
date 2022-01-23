@@ -1,0 +1,6 @@
+1 pop1 het inversion 0.341336
+1 pop1 hom.m3 inversion 0.329854
+1 pop1 hom.m4 inversion 0.32881
+1 pop2 het inversion 0.34408
+1 pop2 hom.m3 inversion 0.312368
+1 pop2 hom.m4 inversion 0.343552

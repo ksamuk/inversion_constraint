@@ -30,7 +30,7 @@ launch_slim_job <- function(model_params, sim_prefix, out_folder, n_reps = NULL,
   # all the parameter flags to pass to the slim launcher script
   model_params$out_folder <- out_folder
   param_flags <- c("migrate", "popsi", "npops", "invssup", "sadaptive", "mutrate", 
-                   "recombrate", "outfold")
+                   "recombrate", "outfold", "ndivselloci")
   
   param_string <- data.frame(flag = param_flags, param = unlist(model_params)) %>%
     mutate(full_flag = paste(flag, param, sep ="=")) %>%
@@ -82,7 +82,7 @@ launch_slim_job <- function(model_params, sim_prefix, out_folder, n_reps = NULL,
 migrate_values <- c(0, 0.01)
 
 # population size
-popsize_values <- c(1e-2)
+popsize_values <- c(2500)
 
 # number of populations
 npops_values <- c(3)
@@ -99,10 +99,14 @@ mutationrate_values <- c(0)
 # recombination rate for all loci
 recombrate_values <- c(1e-2)
 
+# number of diveregently selected loci (2-50, or 100)
+# current just one setting
+n_div_sel_loci_values <- c(30)
+
 # all possible combinations of parameters
 # bless u expand.grid
 param_combos <- expand.grid(migrate_values, popsize_values, npops_values, 
-                            invssup_values, sadaptive_values, mutationrate_values, recombrate_values)
+                            invssup_values, sadaptive_values, mutationrate_values, recombrate_values, n_div_sel_loci_values)
 
 # number of replicates per parameter combination
 n_reps <- 1
@@ -116,13 +120,14 @@ for (i in 1:nrow(param_combos)){
     sadpative <- param_combos[i,][,5]
     mutationrate <- param_combos[i,][,6]
     recombrate <- param_combos[i,][,7]
+    ndivselloci <- param_combos[i,][,8]
     
     model_params <- mget(c("migration_rate", "popsize", "npops", "invssup", "sadpative", 
-                           "mutationrate", "recombrate"))
+                           "mutationrate", "recombrate", "ndivselloci"))
     
     out_folder <- "data/slim_output"
     
     
-    launch_slim_job(model_params, sim_prefix = "novel_environment", out_folder, n_reps = n_reps, dryrun = FALSE, array = FALSE)
+    launch_slim_job(model_params, sim_prefix = "novel_environment_polygenic", out_folder, n_reps = n_reps, dryrun = TRUE, array = TRUE)
     Sys.sleep(1)
 }
