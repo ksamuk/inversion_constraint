@@ -81,20 +81,36 @@ fitness_df <- lapply(fitness_files.all, add_sim_info_as_columns) %>%
   bind_rows()
 
 fit_plot <- fitness_df %>%
-  filter(s == 0.0025, seed == 1803898769701) %>%
+  filter(s == 0.0025) %>%
   mutate(mu = paste0("mu=", mu)) %>%
-  ggplot(aes(x = gen, y = mean_fitness, color = pop)) + # "pop" is just set so all panels are in line
-  #ggplot(aes(x = gen, y = mean_fitness, group = interaction(pop, seed), color = pop)) + # "pop" is just set so all panels are in line
+  #ggplot(aes(x = gen, y = mean_fitness, color = pop)) + # "pop" is just set so all panels are in line
+  ggplot(aes(x = gen, y = mean_fitness, group = interaction(pop, seed), color = pop)) + # "pop" is just set so all panels are in line
   geom_line(size = 0.3) +
   #facet_grid(mu~sim_type) + # option 1
-  #facet_grid(inv~m)+
+  facet_grid(inv~m)+
   theme_bw() +
   ylim(0.88,1.22) +
   xlab("Generation")+
   ylab("Fitness")+
   scale_color_brewer(palette = "Set1") +
-  labs(title=header,color="population")
+  scale_y_continuous(sec.axis = sec_axis(~ . , name = "Inversion Active?\n", breaks = NULL, labels = NULL)) +
+  scale_x_continuous(sec.axis = sec_axis(~ . , name = "Migration Rate\n", breaks = NULL, labels = NULL))
 
+hap_plot <- haplo_df %>%
+  filter(s == 0.0025) %>%
+  #filter(m == 0.01) %>%
+  filter(inv == 1) %>%
+  ggplot(aes(x = gen, y = frequency, color = pop, group = interaction(pop, seed))) + # "pop" is just set so all panels are in line
+  geom_line(size = 0.3) +
+  #facet_grid(mu~sim_type) + # option 1
+  facet_grid(m~hap_class)+
+  theme_bw() +
+  ylim(0.88,1.22) +
+  xlab("Generation")+
+  ylab("Fitness")+
+  scale_color_brewer(palette = "Set1") +
+  scale_y_continuous(sec.axis = sec_axis(~ . , name = "Inversion Active?\n", breaks = NULL, labels = NULL)) +
+  scale_x_continuous(sec.axis = sec_axis(~ . , name = "Inversion Haplotype\n", breaks = NULL, labels = NULL))
 
 for(s in 1:length(seeds)){ # file-loop opens
   
