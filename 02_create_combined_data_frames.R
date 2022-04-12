@@ -23,8 +23,21 @@ fitness_files <- list.files("data/slim_output/fitness", full.names = TRUE)
 add_sim_info_as_columns <- function(x){
   
   # simulation type (polygenic or basic)
-  ifelse(length(grep("polygenic",x))==1,
-         sim_type <- "polygenic", sim_type <- "basic")
+  
+  if(grepl("polygenic", x)){
+    
+    sim_type <- "polygenic"
+    
+  } else if (grepl("clim", x)){
+    
+    sim_type <- ("clim_change")
+
+  } else{
+    
+    sim_type <- ("novel_environment")
+
+  } 
+         
   
   # migration rate
   migR <- gsub(".*.migR=", "", x) %>% gsub(".popS.*.", "", .)
@@ -99,6 +112,7 @@ haplo_df <- haplo_df %>%
 
 write.table(haplo_df, file = "data/slim_combined_haplo_df.txt", 
             row.names = FALSE, quote = FALSE)
+system("gzip data/slim_combined_haplo_df.txt")
 
 # same for fitness data
 fitness_df <- lapply(fitness_files, add_sim_info_as_columns) %>%

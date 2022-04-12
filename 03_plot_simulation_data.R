@@ -31,11 +31,11 @@ mv_avg_optimal_adaptation <- fitness_df %>%
 ################################################################################
 
 mv_avg_absent_basic <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.absent")
 
 inv_absent_basic <- fitness_df %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.absent") %>%
   ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, 
              group = interaction(pop, seed)))+
@@ -50,13 +50,12 @@ inv_absent_basic <- fitness_df %>%
   scale_color_brewer(palette = "Set1")
 
 mv_avg_present_basic <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.present")
 
 inv_present_basic <- fitness_df %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.present") %>%
-
   ggplot(aes(x = gen, y = optimal_adaptation, color = pop, 
              group = interaction(seed, pop)))+
   geom_line(alpha = 0.1, color = "grey", size = 1)+
@@ -80,11 +79,11 @@ figure1 + plot_layout(guides = "collect")
 ################################################################################
 
 mv_avg_basic_p3 <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(pop == "pop3") 
 
 inv_compare_basic_p3 <- fitness_df %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(pop == "pop3") %>%
   ggplot(aes(x = gen, y = optimal_adaptation,  color = inv_active, 
              group = interaction(inv_active, seed)))+
@@ -99,11 +98,11 @@ inv_compare_basic_p3 <- fitness_df %>%
   scale_color_brewer(palette = "Set1")
 
 mv_avg_basic_p1p2 <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(pop == "pop1" | pop == "pop2")
 
 inv_compare_basic_p1p2 <- fitness_df %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(pop == "pop1" | pop == "pop2") %>%
   ggplot(aes(x = gen, y = optimal_adaptation,  color = inv_active, 
              group = interaction(inv_active, seed)))+
@@ -126,15 +125,15 @@ figure1_alt + plot_layout(guides = "collect")
 ################################################################################
 
 mv_avg_absent_basic <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.absent")
 
 mv_avg_basic_inv_present <- mv_avg_optimal_adaptation %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.present")
 
 inv_absent_basic <- fitness_df %>%
-  filter(sim_type == "basic") %>%
+  filter(sim_type == "novel_environment") %>%
   filter(inv_active == "inversion.absent") %>%
   ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, 
              group = interaction(pop, seed)))+
