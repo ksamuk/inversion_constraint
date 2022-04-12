@@ -2,5 +2,3 @@
 .DS_Store
 .AppleDouble
 .Rproj.user
-01_simulations/data/slim_output/haplotypes/*.txt
-01_simulations/data/slim_output/fitness/*.txt

@@ -7,6 +7,6 @@
 #SBATCH --mail-user=ksamuk@gmail.com
 #SBATCH -o tmp/script-%j.out
 
-Rscript 00_run_simulations.R
+Rscript 01_run_simulations.R
 
 

@@ -2,7 +2,7 @@
 #SBATCH -J slim_array-%j
 #SBATCH -t 0-2:00
 #SBATCH --mem 8000
-#SBATCH -o tmp/slim_RE/slim_RE-%A_%a.out
+#SBATCH -o tmp/slim_clim_change-%A_%a.out
 
 # launches a job array of recombination rate evolution simulations
 # used by Rscript launcher to launch arrays for each paramter combination
@@ -46,5 +46,4 @@ slim -d migration_rate=$migrate \
 -d mutation_rate=$mutrate \
 -d recombination_rate=$recombrate \
 -d output_folder=\'${outfold}\' \
--d sim_type=$simtype \
-slim/inversion_constraint_three_pop.slim
+slim/inversion_constraint_climate_change.slim

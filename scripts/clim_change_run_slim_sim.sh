@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J slim_RE-%j
-#SBATCH -o tmp/slim_RE/slim_RE-%j.out
+#SBATCH -o tmp/slim_RE-%j.out
 
 # launches a single replicate of the recombination rate evolution simulation
 # used by Rscript launcher to launch many replicates of each paramter combination
@@ -15,4 +15,4 @@ slim -d migration_rate=$1 \
 -d mutation_rate=$6 \
 -d recombination_rate=$7 \
 -d output_folder=\'${8}\' \
-slim/inversion_constraint_three_pop.slim
+slim/inversion_constraint_climate_change.slim
