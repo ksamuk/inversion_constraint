@@ -132,7 +132,6 @@ haplo_df <- haplo_df %>%
 
 write.table(haplo_df, file = "data/slim_combined_haplo_df.txt", 
             row.names = FALSE, quote = FALSE)
-system("gzip data/slim_combined_haplo_df.txt")
 
 # same for fitness data
 fitness_df <- lapply(fitness_files, add_sim_info_as_columns) %>%
