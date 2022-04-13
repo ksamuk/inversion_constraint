@@ -31,13 +31,13 @@ add_sim_info_as_columns <- function(x){
   } else if (grepl("clim", x)){
     
     sim_type <- ("clim_change")
-
+    
   } else{
     
     sim_type <- ("novel_environment")
-
+    
   } 
-         
+  
   
   # migration rate
   migR <- gsub(".*.migR=", "", x) %>% gsub(".popS.*.", "", .)
@@ -52,7 +52,28 @@ add_sim_info_as_columns <- function(x){
   recR <- gsub(".*.recR=", "", x) %>% gsub(".selC.*.", "", .)
   
   # strength of selection
-  selC <- gsub(".*.selC=", "", x) %>% gsub(".inv.*.", "", .)
+  selC <- gsub(".*.selC=", "", x) %>% gsub("\\.[a-zA-z]+.*", "", .)
+  
+  # number of loci
+  
+  if(!grepl("n_div_sel_loci=", x)){
+    
+    n_loci <- 2
+    
+  } else{
+    
+    if(grepl("loci=4", x)){
+      
+      n_loci <- 40
+      
+    } else if (grepl("loci=100", x)){
+      
+      n_loci <- 100
+      
+    }
+    
+    
+  } 
   
   # inversion active (suppresses recombination?)
   ifelse(length(grep(".inv=1_",x))==1,
@@ -70,19 +91,19 @@ add_sim_info_as_columns <- function(x){
   # read in data and add metadata as columns
   out_df <- read.table(x)
   out_df <- data.frame(sim_type, seed, inv_active, mutR, migR, 
-                       popS, recR, selC, out_df)
+                       popS, recR, selC,n_loci, out_df)
   
   
   if (grepl("hap", x)){
     
     names(out_df) <- c("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
-                       "rec_rate", "sel_str", "gen", "pop", "hap_class", "haplotype", 
+                       "rec_rate", "sel_str",  "n_loci", "gen", "pop", "hap_class", "haplotype", 
                        "frequency")
     
   } else if (grepl("fitness", x)){
     
     names(out_df) <- c("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
-                       "rec_rate", "sel_str", "gen", "pop", "mean_fitness", 
+                       "rec_rate", "sel_str", "n_loci", "gen", "pop", "mean_fitness", 
                        "optimal_adaptation")
     
   }
@@ -102,10 +123,9 @@ haplo_df <- lapply(haplo_files, add_sim_info_as_columns) %>%
 
 
 # normalize fitness values for polygenic case
-
 haplo_df <- haplo_df %>%
   mutate(total_sel_str = ifelse(sim_type == "polygenic", 
-                                round(sel_str * 40, digits = 2), sel_str * 2)) %>%
+                                round(sel_str * n_loci, digits = 2), sel_str * 2)) %>%
   select("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
          "rec_rate", "sel_str","total_sel_str", "gen", "pop", "hap_class", "haplotype", 
          "frequency")
@@ -121,7 +141,7 @@ fitness_df <- lapply(fitness_files, add_sim_info_as_columns) %>%
 
 fitness_df  <- fitness_df  %>%
   mutate(total_sel_str = ifelse(sim_type == "polygenic", 
-                                round(sel_str * 40, digits = 2), sel_str * 2)) %>%
+                                round(sel_str * n_loci, digits = 2), sel_str * 2)) %>%
   select("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
          "rec_rate", "sel_str", "total_sel_str", "gen", "pop", "mean_fitness", 
          "optimal_adaptation")
@@ -129,5 +149,5 @@ fitness_df  <- fitness_df  %>%
 write.table(fitness_df, file = "data/slim_combined_fitness_df.txt", 
             row.names = FALSE, quote = FALSE)
 
-
-  
+system("gzip data/slim_combined_fitness_df.txt")
+system("gzip data/slim_combined_haplo_df.txt")
