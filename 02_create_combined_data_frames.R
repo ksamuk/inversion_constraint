@@ -127,7 +127,7 @@ haplo_df <- haplo_df %>%
   mutate(total_sel_str = ifelse(sim_type == "polygenic", 
                                 round(sel_str * n_loci, digits = 2), sel_str * 2)) %>%
   select("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
-         "rec_rate", "sel_str","total_sel_str", "gen", "pop", "hap_class", "haplotype", 
+         "rec_rate", "sel_str","total_sel_str", "n_loci", "gen", "pop", "hap_class", "haplotype", 
          "frequency")
 
 write.table(haplo_df, file = "data/slim_combined_haplo_df.txt", 
@@ -142,7 +142,7 @@ fitness_df  <- fitness_df  %>%
   mutate(total_sel_str = ifelse(sim_type == "polygenic", 
                                 round(sel_str * n_loci, digits = 2), sel_str * 2)) %>%
   select("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
-         "rec_rate", "sel_str", "total_sel_str", "gen", "pop", "mean_fitness", 
+         "rec_rate", "sel_str", "total_sel_str", "n_loci","gen", "pop", "mean_fitness", 
          "optimal_adaptation")
 
 write.table(fitness_df, file = "data/slim_combined_fitness_df.txt", 

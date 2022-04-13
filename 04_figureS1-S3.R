@@ -1,6 +1,6 @@
 
 ################################################################################
-# Plot results of inversion constraint simulations
+# Create plot of simulation results, Figures S1-S3 in the manuscript
 # Marius Roesti, Kieran Samuk, Kim Gilbert
 # April 2022
 ################################################################################

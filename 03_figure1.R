@@ -20,7 +20,7 @@ fitness_df <- read.table("data/slim_combined_fitness_df.txt.gz", h = T) %>%
 ################################################################################
 
 mv_avg_optimal_adaptation <- fitness_df %>%
-  group_by(sim_type, inv_active, mig_rate, total_sel_str, pop, gen) %>%
+  group_by(sim_type, inv_active, mig_rate, total_sel_str, n_loci, pop, gen) %>%
   summarise(optimal_adaptation = mean(optimal_adaptation)) %>%
   ungroup %>%
   mutate(seed = 1)
@@ -155,10 +155,12 @@ inv_absent_basic <- fitness_df %>%
 
 mv_avg_absent_pg <- mv_avg_optimal_adaptation %>%
   filter(sim_type == "polygenic") %>%
+  filter(n_loci == 100) %>%
   filter(inv_active == "inversion.absent")
 
 inv_absent_pg <- fitness_df %>%
   filter(sim_type == "polygenic") %>%
+  filter(n_loci == 100) %>%
   filter(inv_active == "inversion.absent") %>%
   ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, 
              group = interaction(pop, seed)))+
