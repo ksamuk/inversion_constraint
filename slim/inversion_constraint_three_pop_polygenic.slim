@@ -71,7 +71,11 @@ initialize()
 	defineConstant("div_sel_loci_pre", c(0:(n_div_sel_loci -1)) * integerDiv(100, (n_div_sel_loci)));
 
    //bump loci so positions are odd/even in sequence
-   defineConstant("div_sel_loci", div_sel_loci_pre + (asInteger(seq(0,n_div_sel_loci-1) % 2 == 0)));
+   
+   if (n_div_sel_loci == 100)
+      defineConstant("div_sel_loci", div_sel_loci_pre + 1);
+   else
+      defineConstant("div_sel_loci", div_sel_loci_pre + (asInteger(seq(0,n_div_sel_loci-1) % 2 == 0)));
 	print("div_sel_loci");
 	print(div_sel_loci);
 	

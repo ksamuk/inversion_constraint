@@ -126,7 +126,7 @@ recombrate_values <- c(1e-2)
 
 # number of diveregently selected loci (2-50, or 100)
 # current just one setting
-n_div_sel_loci_values <- c(40, 100)
+n_div_sel_loci_values <- c(100)
 
 # all possible combinations of parameters
 # bless u expand.grid
