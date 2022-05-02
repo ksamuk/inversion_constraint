@@ -130,6 +130,7 @@ haplo_df <- haplo_df %>%
          "rec_rate", "sel_str","total_sel_str", "n_loci", "gen", "pop", "hap_class", "haplotype", 
          "frequency")
 
+
 write.table(haplo_df, file = "data/slim_combined_haplo_df.txt", 
             row.names = FALSE, quote = FALSE)
 
@@ -144,6 +145,17 @@ fitness_df  <- fitness_df  %>%
   select("sim_type", "seed", "inv_active", "mut_rate", "mig_rate", "pop_size", 
          "rec_rate", "sel_str", "total_sel_str", "n_loci","gen", "pop", "mean_fitness", 
          "optimal_adaptation")
+
+# apply adjustment for fitness scaling
+# (the scaling from the sim assumes additive fitness instead of multiplicative)
+# currently not working
+
+fitness_df <- fitness_df %>%
+  mutate(max_fitness_orig = (1 + n_loci * sel_str)) %>%
+  mutate(max_fitness_multi = (1 + sel_str)^(n_loci)) %>%
+  mutate(mean_fitness_orig = (optimal_adaptation * max_fitness_orig)) %>%
+  mutate(optimal_adaptation = (mean_fitness_orig / max_fitness_multi)) 
+
 
 write.table(fitness_df, file = "data/slim_combined_fitness_df.txt", 
             row.names = FALSE, quote = FALSE)

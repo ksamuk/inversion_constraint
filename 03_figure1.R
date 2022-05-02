@@ -58,3 +58,6 @@ inv_absent_basic <- fitness_df %>%
 ggsave(inv_absent_basic, filename = "figures/Figure1B.png", type = "cairo", 
        height = 3, width = 6)
 
+ggsave(inv_absent_basic, filename = "figures/Figure1B.pdf", device = "pdf", 
+       height = 3, width = 6)
+
