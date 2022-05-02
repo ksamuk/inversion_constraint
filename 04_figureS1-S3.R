@@ -40,7 +40,7 @@ mv_avg_basic_inv_present <- mv_avg_optimal_adaptation %>%
 
 figureS1 <- fitness_df %>%
   filter(sim_type == "novel_environment") %>%
-  ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, linetype = inv_active,
+  ggplot(aes(x = gen, y = optimal_adaptation,  color = as.factor(pop), linetype = inv_active,
              group = interaction(pop, seed)))+
   geom_line(alpha = 0.1, col = "grey",linetype = "solid")+
   geom_line(data = mv_avg_absent_basic, size = 1)+
@@ -77,7 +77,7 @@ mv_avg_basic_inv_present <- mv_avg_optimal_adaptation %>%
 
 figureS2 <- fitness_df %>%
   filter(sim_type == "clim_change") %>%
-  ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, linetype = inv_active,
+  ggplot(aes(x = gen, y = optimal_adaptation,  color = as.factor(pop), linetype = inv_active,
              group = interaction(pop, seed)))+
   geom_line(alpha = 0.1, col = "grey",linetype = "solid")+
   geom_line(data = mv_avg_absent_basic, size = 1)+
@@ -117,7 +117,7 @@ mv_avg_basic_inv_present <- mv_avg_optimal_adaptation %>%
 figureS3 <- fitness_df %>%
   filter(sim_type == "polygenic") %>%
   filter(n_loci == 100) %>%
-  ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, linetype = inv_active,
+  ggplot(aes(x = gen, y = optimal_adaptation,  color = as.factor(pop), linetype = inv_active,
              group = interaction(pop, seed)))+
   geom_line(alpha = 0.1, col = "grey",linetype = "solid")+
   geom_line(data = mv_avg_absent_basic, size = 1)+

@@ -44,7 +44,7 @@ inv_absent_basic <- fitness_df %>%
   filter(mig_rate == 0.01, total_sel_str == 0.1) %>%
   filter(sim_type == "novel_environment") %>%
   #filter(inv_active == "inversion.absent") %>%
-  ggplot(aes(x = gen, y = optimal_adaptation,  color = pop, linetype = inv_active,
+  ggplot(aes(x = gen, y = optimal_adaptation,  color = as.factor(pop), linetype = inv_active,
              group = interaction(pop, seed)))+
   geom_line(alpha = 0.1, col = "grey",linetype = "solid")+
   geom_line(data = mv_avg_absent_basic, size = 1)+
